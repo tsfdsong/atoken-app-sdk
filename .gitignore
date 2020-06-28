@@ -1,3 +1,5 @@
 go.mod
 go.sum
 output/
+hdwallet/hdwallet_test.go
+build/

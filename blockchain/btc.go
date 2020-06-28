@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/tsfdsong/hdwallet"
+	"github.com/tsfdsong/atoken-app-sdk/hdwallet"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"

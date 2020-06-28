@@ -4,7 +4,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"github.com/tsfdsong/hdwallet"
+	"github.com/btcsuite/btcd/btcec"
+	"github.com/tsfdsong/atoken-app-sdk/hdwallet"
 
 	"github.com/tyler-smith/go-bip39"
 )
@@ -31,7 +32,7 @@ type Wallets struct {
 }
 
 //CreateWallets ...
-func CreateWallets(mnemonic, coinType string, count int) (string, error) {
+func CreateWallets(mnemonic, coinType string, count int, isWIF bool) (string, error) {
 	//0. get mnemonic
 	mnemonic, err := hdwallet.CreateMnemonic(mnemonic)
 	if err != nil {
@@ -41,7 +42,7 @@ func CreateWallets(mnemonic, coinType string, count int) (string, error) {
 	result := make([]*WalletObject, 0)
 	for i := 0; i < count; i++ {
 		//1. common address
-		wobj, err := getKeyPair(mnemonic, coinType, i, false)
+		wobj, err := getKeyPair(mnemonic, coinType, i, false, isWIF)
 		if err != nil {
 			return "", err
 		}
@@ -49,7 +50,7 @@ func CreateWallets(mnemonic, coinType string, count int) (string, error) {
 
 		if coinType == "BTC" {
 			//2. segwit address
-			segobj, err := getKeyPair(mnemonic, coinType, i, true)
+			segobj, err := getKeyPair(mnemonic, coinType, i, true, isWIF)
 			if err != nil {
 				return "", err
 			}
@@ -70,13 +71,13 @@ func CreateWallets(mnemonic, coinType string, count int) (string, error) {
 }
 
 //CreateWallet ...
-func CreateWallet(mnemonic, coinType string, isSegwit bool) (string, error) {
+func CreateWallet(mnemonic, coinType string, isSegwit, isWIF bool) (string, error) {
 	mnemonic, err := hdwallet.CreateMnemonic(mnemonic)
 	if err != nil {
 		return "", err
 	}
 
-	obj, err := getKeyPair(mnemonic, coinType, 0, isSegwit)
+	obj, err := getKeyPair(mnemonic, coinType, 0, isSegwit, isWIF)
 	if err != nil {
 		return "", err
 	}
@@ -90,7 +91,7 @@ func CreateWallet(mnemonic, coinType string, isSegwit bool) (string, error) {
 }
 
 //getKeyPair ...
-func getKeyPair(mnemonic, coinType string, addressIndex int, isSegwit bool) (*WalletObject, error) {
+func getKeyPair(mnemonic, coinType string, addressIndex int, isSegwit, isWIF bool) (*WalletObject, error) {
 	wallet, err := hdwallet.NewWallet(mnemonic, coinType)
 	if err != nil {
 		return nil, err
@@ -102,8 +103,15 @@ func getKeyPair(mnemonic, coinType string, addressIndex int, isSegwit bool) (*Wa
 		return nil, err
 	}
 
-	//get hex of private key
-	hexPrivateKey, err := wallet.GetPrivateKey(coinType, addressIndex, isSegwit)
+	//get private key
+	var strPrivateKey string
+	if isWIF {
+		strPrivateKey, err = wallet.GetWIFPrivateKey(coinType, addressIndex, isSegwit)
+
+	} else {
+		strPrivateKey, err = wallet.GetPrivateKey(coinType, addressIndex, isSegwit)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +123,7 @@ func getKeyPair(mnemonic, coinType string, addressIndex int, isSegwit bool) (*Wa
 	}
 
 	addrTypr := AddresType{
-		PrivateKey:   hexPrivateKey,
+		PrivateKey:   strPrivateKey,
 		PublicKey:    publicKey,
 		Address:      address,
 		AddressIndex: addressIndex,
@@ -133,9 +141,16 @@ func getKeyPair(mnemonic, coinType string, addressIndex int, isSegwit bool) (*Wa
 }
 
 //ImportPrivateKey ...
-func ImportPrivateKey(coinType, privateKey string, isSegwit bool) (string, error) {
+func ImportPrivateKey(coinType, privateKey string, isSegwit, isWIF bool) (string, error) {
 	//1. Recover private key from string
-	ecdsaPubKey, err := hdwallet.HexToECDSAPublicKey(privateKey)
+	var ecdsaPubKey *btcec.PublicKey
+	var err error
+	if isWIF {
+		ecdsaPubKey, err = hdwallet.WIFToECDSAPublicKey(privateKey)
+	} else {
+		ecdsaPubKey, err = hdwallet.HexToECDSAPublicKey(privateKey)
+	}
+
 	if err != nil {
 		return "", err
 	}
