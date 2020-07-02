@@ -2,6 +2,7 @@ package vex
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -48,6 +49,8 @@ func getRawTxData(tx *eos.Transaction, chainID []byte, wifPriKey string) (string
 	if err != nil {
 		return "", fmt.Errorf("NewPrivateKey: %s", err)
 	}
+	str := hex.EncodeToString(sigDigest)
+	fmt.Printf("hex: %v\n", str)
 
 	sig, err := privateKey.Sign(sigDigest)
 	if err != nil {
@@ -368,37 +371,42 @@ func delegateBW(info *eos.InfoResp, bw *DelegateBWInfo, wifPriKey string) (strin
 	return data, nil
 }
 
-func unDelegateBW(info *eos.InfoResp, bw *UnDelegateBWInfo, wifPriKey string) (string, error) {
+func unDelegateBW(info *eos.InfoResp, bws []UnDelegateBWInfo, wifPriKey string) (string, error) {
 	txOpts := &eos.TxOptions{
 		ChainID:     info.ChainID,
 		HeadBlockID: info.HeadBlockID,
 	}
 
-	netAsset, err := eos.NewAssetFromString(bw.UnstakeNet)
-	if err != nil {
-		return "", fmt.Errorf("unDelegateBW net asset %v", err)
+	actList := make([]*eos.Action, 0)
+	for _, bw := range bws {
+		netAsset, err := eos.NewAssetFromString(bw.UnstakeNet)
+		if err != nil {
+			return "", fmt.Errorf("unDelegateBW net asset %v", err)
+		}
+
+		cpuAsset, err := eos.NewAssetFromString(bw.UnstakeCPU)
+		if err != nil {
+			return "", fmt.Errorf("unDelegateBW cpu asset %v", err)
+		}
+
+		actBW := &eos.Action{
+			Account: eos.AN("vexcore"),
+			Name:    eos.ActN("undelegatebw"),
+			Authorization: []eos.PermissionLevel{
+				{Actor: eos.AccountName(bw.From), Permission: eos.PN("active")},
+			},
+			ActionData: eos.NewActionData(system.UndelegateBW{
+				From:       eos.AccountName(bw.From),
+				Receiver:   eos.AccountName(bw.Receiver),
+				UnstakeNet: netAsset,
+				UnstakeCPU: cpuAsset,
+			}),
+		}
+
+		actList = append(actList, actBW)
 	}
 
-	cpuAsset, err := eos.NewAssetFromString(bw.UnstakeCPU)
-	if err != nil {
-		return "", fmt.Errorf("unDelegateBW cpu asset %v", err)
-	}
-
-	actBW := &eos.Action{
-		Account: eos.AN("vexcore"),
-		Name:    eos.ActN("undelegatebw"),
-		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AccountName(bw.From), Permission: eos.PN("active")},
-		},
-		ActionData: eos.NewActionData(system.UndelegateBW{
-			From:       eos.AccountName(bw.From),
-			Receiver:   eos.AccountName(bw.Receiver),
-			UnstakeNet: netAsset,
-			UnstakeCPU: cpuAsset,
-		}),
-	}
-
-	tx := eos.NewTransaction([]*eos.Action{actBW}, txOpts)
+	tx := eos.NewTransaction(actList, txOpts)
 
 	data, err := getRawTxData(tx, info.ChainID, wifPriKey)
 	if err != nil {

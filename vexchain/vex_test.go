@@ -70,20 +70,20 @@ func TestVexNewAccount(t *testing.T) {
 
 	newAccount := NewAccountInfo{
 		Creator: "atokentry123",
-		Name:    "atokenmai345",
+		Name:    "atokenmax345",
 		Owner:   ownerAuthor,
 		Active:  activeAuthor,
 	}
 
 	buyRAMBytes := BuyRAMBytes{
 		Payer:    "atokentry123",
-		Receiver: "atokenmai345",
+		Receiver: "atokenmax345",
 		Bytes:    4096,
 	}
 
 	deleBW := DelegateBWInfo{
 		From:     "atokentry123",
-		Receiver: "atokenmai345",
+		Receiver: "atokenmax345",
 		StakeNet: "0.2500 VEX",
 		StakeCPU: "0.7500 VEX",
 		Transfer: 1,
@@ -107,6 +107,8 @@ func TestVexNewAccount(t *testing.T) {
 		t.Errorf("createAccount: %v\n", err)
 		return
 	}
+
+	fmt.Printf("tx: %v\n", tx)
 
 	var packedTx eos.PackedTransaction
 	err = json.Unmarshal([]byte(tx), &packedTx)
@@ -171,7 +173,7 @@ func TestVexDelegateBWNoTransfer(t *testing.T) {
 
 	input := &DelegateBWInfo{
 		From:     "atokentry123",
-		Receiver: "atokenmai345",
+		Receiver: "atokenmai123",
 		StakeNet: "1.0000 VEX",
 		StakeCPU: "1.0000 VEX",
 		Transfer: 0,
@@ -211,12 +213,14 @@ func TestVexDelegateBWNoTransfer(t *testing.T) {
 }
 
 func TestVexUnDelegateBWNoTransfer(t *testing.T) {
-	input := &UnDelegateBWInfo{
+	oneBW := UnDelegateBWInfo{
 		From:       "atokentry123",
-		Receiver:   "atokenmai345",
+		Receiver:   "atokenmai123",
 		UnstakeNet: "0.1500 VEX",
 		UnstakeCPU: "0.1500 VEX",
 	}
+
+	input := []UnDelegateBWInfo{oneBW}
 
 	fmt.Printf("input: %v\n", input)
 
@@ -295,12 +299,14 @@ func TestVexDelegateBWTransfer(t *testing.T) {
 }
 
 func TestVexUnDelegateBWTransfer(t *testing.T) {
-	input := &UnDelegateBWInfo{
+	oneBW := UnDelegateBWInfo{
 		From:       "atokenmai345",
 		Receiver:   "atokenmai345",
 		UnstakeNet: "0.0800 VEX",
 		UnstakeCPU: "0.4800 VEX",
 	}
+
+	input := []UnDelegateBWInfo{oneBW}
 
 	fmt.Printf("input: %v\n", input)
 

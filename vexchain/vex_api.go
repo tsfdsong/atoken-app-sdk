@@ -35,13 +35,13 @@ func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
 	switch cmdType {
 	case tVEXTransferTypeUndelegatebw:
 		{
-			var bw UnDelegateBWInfo
+			bw := make([]UnDelegateBWInfo, 0)
 			err := json.Unmarshal([]byte(data), &bw)
 			if err != nil {
 				return "", fmt.Errorf("unmarshal UnDelegateBWInfo: %v", err)
 			}
 
-			return unDelegateBW(&info, &bw, wifPriKey)
+			return unDelegateBW(&info, bw, wifPriKey)
 		}
 	case tVEXTransferTypeDelegatebw:
 		{
