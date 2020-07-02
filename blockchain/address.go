@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/mr-tron/base58"
 	"github.com/tsfdsong/atoken-app-sdk/hdwallet"
 
 	"github.com/tyler-smith/go-bip39"
@@ -90,6 +91,25 @@ func CreateWallet(mnemonic, coinType string, isSegwit, isWIF bool) (string, erro
 	return res, nil
 }
 
+//HexToWIF convert hex to wif
+func HexToWIF(hexkey string) string {
+	hexBytes, err := hex.DecodeString(hexkey)
+	if err != nil {
+		return ""
+	}
+
+	//0.add version 0x80
+	versionPayload := append([]byte{byte(0x80)}, hexBytes...)
+
+	checksumBytes := hdwallet.CheckSum(versionPayload)
+
+	fullPayload := append(versionPayload, checksumBytes...)
+
+	result := base58.Encode(fullPayload)
+
+	return result
+}
+
 //getKeyPair ...
 func getKeyPair(mnemonic, coinType string, addressIndex int, isSegwit, isWIF bool) (*WalletObject, error) {
 	wallet, err := hdwallet.NewWallet(mnemonic, coinType)
@@ -107,7 +127,6 @@ func getKeyPair(mnemonic, coinType string, addressIndex int, isSegwit, isWIF boo
 	var strPrivateKey string
 	if isWIF {
 		strPrivateKey, err = wallet.GetWIFPrivateKey(coinType, addressIndex, isSegwit)
-
 	} else {
 		strPrivateKey, err = wallet.GetPrivateKey(coinType, addressIndex, isSegwit)
 	}
