@@ -75,8 +75,8 @@ type SellRAMInfo struct {
 type DelegateBWInfo struct {
 	From     string `json:"from"`
 	Receiver string `json:"receiver"`
-	StakeNet string `json:"stake_net"`
-	StakeCPU string `json:"stake_cpu"`
+	StakeNet string `json:"stake_net_quantity"`
+	StakeCPU string `json:"stake_cpu_quantity"`
 	Transfer int    `json:"transfer"`
 }
 
