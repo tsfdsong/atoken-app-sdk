@@ -73,7 +73,7 @@ func getRawTxData(tx *eos.Transaction, chainID []byte, wifPriKey string) (string
 	return txres, nil
 }
 
-func transferAmount(info *eos.InfoResp, in *TransferInfo, wifPriKey string) (string, error) {
+func transferAmount(info *eos.InfoResp, in *TransferInfo, wifPriKey, perm string) (string, error) {
 
 	txOpts := &eos.TxOptions{
 		ChainID:     info.ChainID,
@@ -93,7 +93,7 @@ func transferAmount(info *eos.InfoResp, in *TransferInfo, wifPriKey string) (str
 		Account: token.AN("vex.token"),
 		Name:    token.ActN("transfer"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: from, Permission: token.PN("active")},
+			{Actor: from, Permission: token.PN(perm)},
 		},
 		ActionData: eos.NewActionData(token.Transfer{
 			From:     from,
@@ -113,7 +113,7 @@ func transferAmount(info *eos.InfoResp, in *TransferInfo, wifPriKey string) (str
 	return data, nil
 }
 
-func newVexAccount(in *NewAccountInfo) (*eos.Action, error) {
+func newVexAccount(in *NewAccountInfo, perm string) (*eos.Action, error) {
 	ownerKeys := make([]eos.KeyWeight, 0)
 	for _, onk := range in.Owner.Keys {
 		pubKey, err := ecc.NewPublicKey(onk.PublicKey)
@@ -176,7 +176,7 @@ func newVexAccount(in *NewAccountInfo) (*eos.Action, error) {
 		Account: eos.AN("vexcore"),
 		Name:    eos.ActN("newaccount"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AccountName(in.Creator), Permission: eos.PN("active")},
+			{Actor: eos.AccountName(in.Creator), Permission: eos.PN(perm)},
 		},
 		ActionData: eos.NewActionData(system.NewAccount{
 			Creator: eos.AccountName(in.Creator),
@@ -195,12 +195,12 @@ func newVexAccount(in *NewAccountInfo) (*eos.Action, error) {
 	}, nil
 }
 
-func createAccount(info *eos.InfoResp, account *CreateAccountInfo, wifPriKey string) (string, error) {
+func createAccount(info *eos.InfoResp, account *CreateAccountInfo, wifPriKey, perm string) (string, error) {
 	txOpts := &eos.TxOptions{
 		ChainID:     info.ChainID,
 		HeadBlockID: info.HeadBlockID,
 	}
-	actAccount, err := newVexAccount(&account.Account)
+	actAccount, err := newVexAccount(&account.Account, perm)
 	if err != nil {
 		return "", fmt.Errorf("newVexAccount: %v", err)
 	}
@@ -209,7 +209,7 @@ func createAccount(info *eos.InfoResp, account *CreateAccountInfo, wifPriKey str
 		Account: eos.AN("vexcore"),
 		Name:    eos.ActN("buyrambytes"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AccountName(account.RAM.Payer), Permission: eos.PN("active")},
+			{Actor: eos.AccountName(account.RAM.Payer), Permission: eos.PN(perm)},
 		},
 		ActionData: eos.NewActionData(system.BuyRAMBytes{
 			Payer:    eos.AccountName(account.RAM.Payer),
@@ -237,7 +237,7 @@ func createAccount(info *eos.InfoResp, account *CreateAccountInfo, wifPriKey str
 		Account: eos.AN("vexcore"),
 		Name:    eos.ActN("delegatebw"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AccountName(account.BW.From), Permission: eos.PN("active")},
+			{Actor: eos.AccountName(account.BW.From), Permission: eos.PN(perm)},
 		},
 		ActionData: eos.NewActionData(system.DelegateBW{
 			From:     eos.AccountName(account.BW.From),
@@ -258,7 +258,7 @@ func createAccount(info *eos.InfoResp, account *CreateAccountInfo, wifPriKey str
 	return data, nil
 }
 
-func sellRAM(info *eos.InfoResp, in *SellRAMInfo, wifPriKey string) (string, error) {
+func sellRAM(info *eos.InfoResp, in *SellRAMInfo, wifPriKey, perm string) (string, error) {
 	txOpts := &eos.TxOptions{
 		ChainID:     info.ChainID,
 		HeadBlockID: info.HeadBlockID,
@@ -273,7 +273,7 @@ func sellRAM(info *eos.InfoResp, in *SellRAMInfo, wifPriKey string) (string, err
 		Account: eos.AN("vexcore"),
 		Name:    eos.ActN("sellram"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: account, Permission: eos.PermissionName("active")},
+			{Actor: account, Permission: eos.PermissionName(perm)},
 		},
 		ActionData: eos.NewActionData(system.SellRAM{
 			Account: account,
@@ -291,7 +291,7 @@ func sellRAM(info *eos.InfoResp, in *SellRAMInfo, wifPriKey string) (string, err
 	return data, nil
 }
 
-func buyRAM(info *eos.InfoResp, in *BuyRAMInfo, wifPriKey string) (string, error) {
+func buyRAM(info *eos.InfoResp, in *BuyRAMInfo, wifPriKey, perm string) (string, error) {
 	txOpts := &eos.TxOptions{
 		ChainID:     info.ChainID,
 		HeadBlockID: info.HeadBlockID,
@@ -306,7 +306,7 @@ func buyRAM(info *eos.InfoResp, in *BuyRAMInfo, wifPriKey string) (string, error
 		Account: eos.AN("vexcore"),
 		Name:    eos.ActN("buyram"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AccountName(in.Payer), Permission: eos.PN("active")},
+			{Actor: eos.AccountName(in.Payer), Permission: eos.PN(perm)},
 		},
 		ActionData: eos.NewActionData(system.BuyRAM{
 			Payer:    eos.AccountName(in.Payer),
@@ -325,7 +325,7 @@ func buyRAM(info *eos.InfoResp, in *BuyRAMInfo, wifPriKey string) (string, error
 	return data, nil
 }
 
-func delegateBW(info *eos.InfoResp, bw *DelegateBWInfo, wifPriKey string) (string, error) {
+func delegateBW(info *eos.InfoResp, bw *DelegateBWInfo, wifPriKey, perm string) (string, error) {
 	txOpts := &eos.TxOptions{
 		ChainID:     info.ChainID,
 		HeadBlockID: info.HeadBlockID,
@@ -350,7 +350,7 @@ func delegateBW(info *eos.InfoResp, bw *DelegateBWInfo, wifPriKey string) (strin
 		Account: eos.AN("vexcore"),
 		Name:    eos.ActN("delegatebw"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AccountName(bw.From), Permission: eos.PN("active")},
+			{Actor: eos.AccountName(bw.From), Permission: eos.PN(perm)},
 		},
 		ActionData: eos.NewActionData(system.DelegateBW{
 			From:     eos.AccountName(bw.From),
@@ -371,7 +371,7 @@ func delegateBW(info *eos.InfoResp, bw *DelegateBWInfo, wifPriKey string) (strin
 	return data, nil
 }
 
-func unDelegateBW(info *eos.InfoResp, bws []UnDelegateBWInfo, wifPriKey string) (string, error) {
+func unDelegateBW(info *eos.InfoResp, bws []UnDelegateBWInfo, wifPriKey, perm string) (string, error) {
 	txOpts := &eos.TxOptions{
 		ChainID:     info.ChainID,
 		HeadBlockID: info.HeadBlockID,
@@ -393,7 +393,7 @@ func unDelegateBW(info *eos.InfoResp, bws []UnDelegateBWInfo, wifPriKey string) 
 			Account: eos.AN("vexcore"),
 			Name:    eos.ActN("undelegatebw"),
 			Authorization: []eos.PermissionLevel{
-				{Actor: eos.AccountName(bw.From), Permission: eos.PN("active")},
+				{Actor: eos.AccountName(bw.From), Permission: eos.PN(perm)},
 			},
 			ActionData: eos.NewActionData(system.UndelegateBW{
 				From:       eos.AccountName(bw.From),
@@ -416,7 +416,7 @@ func unDelegateBW(info *eos.InfoResp, bws []UnDelegateBWInfo, wifPriKey string) 
 	return data, nil
 }
 
-func buyRAMBytes(info *eos.InfoResp, in *BuyRAMBytes, wifPriKey string) (string, error) {
+func buyRAMBytes(info *eos.InfoResp, in *BuyRAMBytes, wifPriKey, perm string) (string, error) {
 	txOpts := &eos.TxOptions{
 		ChainID:     info.ChainID,
 		HeadBlockID: info.HeadBlockID,
@@ -426,7 +426,7 @@ func buyRAMBytes(info *eos.InfoResp, in *BuyRAMBytes, wifPriKey string) (string,
 		Account: eos.AN("vexcore"),
 		Name:    eos.ActN("buyrambytes"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AccountName(in.Payer), Permission: eos.PN("active")},
+			{Actor: eos.AccountName(in.Payer), Permission: eos.PN(perm)},
 		},
 		ActionData: eos.NewActionData(system.BuyRAMBytes{
 			Payer:    eos.AccountName(in.Payer),

@@ -25,7 +25,7 @@ const (
 )
 
 //VexAPI common api
-func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
+func VexAPI(cmdType int, infoStr, data, wifPriKey, perm string) (string, error) {
 	var info eos.InfoResp
 	err := json.Unmarshal([]byte(infoStr), &info)
 	if err != nil {
@@ -41,7 +41,7 @@ func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
 				return "", fmt.Errorf("unmarshal UnDelegateBWInfo: %v", err)
 			}
 
-			return unDelegateBW(&info, bw, wifPriKey)
+			return unDelegateBW(&info, bw, wifPriKey, perm)
 		}
 	case tVEXTransferTypeDelegatebw:
 		{
@@ -51,7 +51,7 @@ func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
 				return "", fmt.Errorf("unmarshal DelegateBWInfo: %v", err)
 			}
 
-			return delegateBW(&info, &bw, wifPriKey)
+			return delegateBW(&info, &bw, wifPriKey, perm)
 		}
 	case tVEXTransferTypeBuyRam:
 		{
@@ -61,7 +61,7 @@ func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
 				return "", fmt.Errorf("unmarshal BuyRAMInfo: %v", err)
 			}
 
-			return buyRAM(&info, &ram, wifPriKey)
+			return buyRAM(&info, &ram, wifPriKey, perm)
 		}
 	case tVEXTransferTypeSellRam:
 		{
@@ -71,7 +71,7 @@ func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
 				return "", fmt.Errorf("unmarshal SellRAMInfo: %v", err)
 			}
 
-			return sellRAM(&info, &ram, wifPriKey)
+			return sellRAM(&info, &ram, wifPriKey, perm)
 		}
 	case tVEXTransferTypeCreateAccount:
 		{
@@ -81,7 +81,7 @@ func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
 				return "", fmt.Errorf("unmarshal CreateAccountInfo: %v", err)
 			}
 
-			return createAccount(&info, &acct, wifPriKey)
+			return createAccount(&info, &acct, wifPriKey, perm)
 		}
 	case tVEXTransferTypeTransferAmount:
 		{
@@ -91,7 +91,7 @@ func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
 				return "", fmt.Errorf("unmarshal TransferInfo: %v", err)
 			}
 
-			return transferAmount(&info, &trans, wifPriKey)
+			return transferAmount(&info, &trans, wifPriKey, perm)
 		}
 	case tVEXTransferTypeBuyRamBytes:
 		{
@@ -101,7 +101,7 @@ func VexAPI(cmdType int, infoStr, data, wifPriKey string) (string, error) {
 				return "", fmt.Errorf("unmarshal BuyRAMBytes: %v", err)
 			}
 
-			return buyRAMBytes(&info, &ram, wifPriKey)
+			return buyRAMBytes(&info, &ram, wifPriKey, perm)
 		}
 	}
 
